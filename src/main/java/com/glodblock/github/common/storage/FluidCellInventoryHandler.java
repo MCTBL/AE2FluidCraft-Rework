@@ -8,6 +8,7 @@ import com.glodblock.github.util.Util;
 
 import appeng.api.AEApi;
 import appeng.api.config.IncludeExclude;
+import appeng.api.storage.ICellCacheRegistry;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEFluidStack;
@@ -17,7 +18,7 @@ import appeng.me.storage.MEPassThrough;
 import appeng.util.item.AEFluidStack;
 import appeng.util.prioitylist.PrecisePriorityList;
 
-public class FluidCellInventoryHandler extends MEInventoryHandler<IAEFluidStack> implements IFluidCellInventoryHandler {
+public class FluidCellInventoryHandler extends MEInventoryHandler<IAEFluidStack> implements IFluidCellInventoryHandler, ICellCacheRegistry {
 
     protected FluidCellInventoryHandler(final IMEInventory<IAEFluidStack> c) {
         super(c, StorageChannel.FLUIDS);
@@ -73,5 +74,50 @@ public class FluidCellInventoryHandler extends MEInventoryHandler<IAEFluidStack>
         }
 
         return val;
+    }
+
+    @Override
+    public boolean canGetInv() {
+        return this.getCellInv() != null;
+    }
+
+    @Override
+    public long getTotalBytes() {
+        return this.getCellInv().getTotalBytes();
+    }
+
+    @Override
+    public long getFreeBytes() {
+        return this.getCellInv().getFreeBytes();
+    }
+
+    @Override
+    public long getUsedBytes() {
+        return this.getCellInv().getUsedBytes();
+    }
+
+    @Override
+    public long getTotalTypes() {
+        return this.getCellInv().getTotalFluidTypes();
+    }
+
+    @Override
+    public long getFreeTypes() {
+        return this.getCellInv().getRemainingFluidTypes();
+    }
+
+    @Override
+    public long getUsedTypes() {
+        return this.getCellInv().getStoredFluidTypes();
+    }
+
+    @Override
+    public int getCellStatus() {
+        return this.getStatusForCell();
+    }
+
+    @Override
+    public StorageChannel getCellType() {
+        return StorageChannel.FLUIDS;
     }
 }
