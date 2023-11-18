@@ -18,7 +18,8 @@ import appeng.me.storage.MEPassThrough;
 import appeng.util.item.AEFluidStack;
 import appeng.util.prioitylist.PrecisePriorityList;
 
-public class FluidCellInventoryHandler extends MEInventoryHandler<IAEFluidStack> implements IFluidCellInventoryHandler, ICellCacheRegistry {
+public class FluidCellInventoryHandler extends MEInventoryHandler<IAEFluidStack>
+        implements IFluidCellInventoryHandler, ICellCacheRegistry {
 
     protected FluidCellInventoryHandler(final IMEInventory<IAEFluidStack> c) {
         super(c, StorageChannel.FLUIDS);
