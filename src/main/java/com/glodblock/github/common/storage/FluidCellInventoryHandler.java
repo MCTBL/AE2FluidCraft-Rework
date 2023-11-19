@@ -79,7 +79,12 @@ public class FluidCellInventoryHandler extends MEInventoryHandler<IAEFluidStack>
 
     @Override
     public boolean canGetInv() {
-        return this.getCellInv() != null;
+        IFluidCellInventory cellInv = this.getCellInv();
+        if (cellInv instanceof CreativeFluidCellInventory) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     @Override
@@ -118,7 +123,7 @@ public class FluidCellInventoryHandler extends MEInventoryHandler<IAEFluidStack>
     }
 
     @Override
-    public StorageChannel getCellType() {
-        return StorageChannel.FLUIDS;
+    public TYPE getCellType() {
+        return TYPE.FLUID;
     }
 }
