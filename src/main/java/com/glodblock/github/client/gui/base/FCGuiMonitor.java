@@ -101,6 +101,7 @@ public abstract class FCGuiMonitor<T extends IAEStack<T>> extends FCBaseMEGui
     protected GuiImgButton terminalStyleBox;
     protected GuiImgButton searchStringSave;
     protected GuiImgButton typeFilter;
+    protected boolean hasShiftKeyDown = false;
 
     @SuppressWarnings("unchecked")
     public FCGuiMonitor(final InventoryPlayer inventoryPlayer, final ITerminalHost te, final FCContainerMonitor<T> c) {
@@ -771,5 +772,15 @@ public abstract class FCGuiMonitor<T extends IAEStack<T>> extends FCBaseMEGui
     @Override
     public boolean isOverTextField(int mousex, int mousey) {
         return searchField.isMouseIn(mousex, mousey);
+    }
+
+    @Override
+    public void handleKeyboardInput() {
+        super.handleKeyboardInput();
+        hasShiftKeyDown |= isShiftKeyDown();
+        if (hasShiftKeyDown && !Keyboard.getEventKeyState()) { // keyup
+            this.repo.updateView();
+            hasShiftKeyDown = false;
+        }
     }
 }

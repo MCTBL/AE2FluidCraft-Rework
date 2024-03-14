@@ -12,6 +12,13 @@ import cpw.mods.fml.common.Loader;
 
 public final class ModAndClassUtil {
 
+    /**
+     * GTNH fork of GregTech5 Unofficial
+     */
+    public static boolean GT5NH = false;
+    /**
+     * GregTech5 / GregTech5 Unofficial (Blood-Asp's "official" GT5u)
+     */
     public static boolean GT5 = false;
     public static boolean GT6 = false;
     public static boolean EC2 = false;
@@ -119,7 +126,14 @@ public final class ModAndClassUtil {
             isTypeFilter = false;
         }
 
-        if (Loader.isModLoaded("gregtech") && !Loader.isModLoaded("gregapi")) GT5 = true;
+        if (Loader.isModLoaded("gregtech") && !Loader.isModLoaded("gregapi")) {
+            try {
+                Class.forName("gregtech.api.recipe.RecipeMap");
+                GT5NH = true;
+            } catch (ClassNotFoundException e) {
+                GT5 = true;
+            }
+        }
         if (Loader.isModLoaded("gregapi") && Loader.isModLoaded("gregapi_post")) GT6 = true;
         if (Loader.isModLoaded("extracells")) EC2 = true;
         if (Loader.isModLoaded("EnderIO")) EIO = true;

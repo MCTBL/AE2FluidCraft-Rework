@@ -402,6 +402,11 @@ public class FluidCellInventory implements IFluidCellInventory {
     }
 
     @Override
+    public IInventory getUpgradesInventory() {
+        return this.cellType.getUpgradesInventory(this.cellItem);
+    }
+
+    @Override
     public StorageChannel getChannel() {
         return StorageChannel.FLUIDS;
     }

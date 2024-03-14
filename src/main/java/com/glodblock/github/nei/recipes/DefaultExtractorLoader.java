@@ -1,5 +1,7 @@
 package com.glodblock.github.nei.recipes;
 
+import java.util.Collection;
+
 import com.glodblock.github.nei.recipes.extractor.AvaritiaRecipeExtractor;
 import com.glodblock.github.nei.recipes.extractor.EnderIORecipeExtractor;
 import com.glodblock.github.nei.recipes.extractor.ForestryRecipeExtractor;
@@ -19,8 +21,6 @@ import forestry.factory.recipes.nei.NEIHandlerMoistener;
 import forestry.factory.recipes.nei.NEIHandlerSqueezer;
 import forestry.factory.recipes.nei.NEIHandlerStill;
 import gregapi.recipes.Recipe;
-import gregtech.api.util.GTPP_Recipe;
-import gregtech.api.util.GT_Recipe;
 
 public class DefaultExtractorLoader implements Runnable {
 
@@ -32,12 +32,19 @@ public class DefaultExtractorLoader implements Runnable {
         FluidRecipe.addRecipeMap("crafting2x2", new VanillaRecipeExtractor(true));
 
         if (ModAndClassUtil.GT5) {
-            for (GT_Recipe.GT_Recipe_Map tMap : GT_Recipe.GT_Recipe_Map.sMappings) {
-                FluidRecipe.addRecipeMap(
-                        tMap.mNEIName,
-                        new GregTech5RecipeExtractor(
-                                tMap.mNEIName.equals("gt.recipe.scanner")
-                                        || tMap.mNEIName.equals("gt.recipe.fakeAssemblylineProcess")));
+            try {
+                Class<?> recipeMapClazz = Class.forName("gregtech.api.util.GT_Recipe$GT_Recipe_Map");
+                Collection<?> sMappings = (Collection<?>) recipeMapClazz.getDeclaredField("sMappings").get(null);
+                for (Object tMap : sMappings) {
+                    String mNEIName = (String) recipeMapClazz.getDeclaredField("mNEIName").get(tMap);
+                    FluidRecipe.addRecipeMap(
+                            mNEIName,
+                            new GregTech5RecipeExtractor(
+                                    mNEIName.equals("gt.recipe.scanner")
+                                            || mNEIName.equals("gt.recipe.fakeAssemblylineProcess")));
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
         }
 
@@ -47,11 +54,21 @@ public class DefaultExtractorLoader implements Runnable {
             }
         }
 
-        if (ModAndClassUtil.GTPP) {
-            for (GTPP_Recipe.GTPP_Recipe_Map_Internal gtppMap : GTPP_Recipe.GTPP_Recipe_Map_Internal.sMappingsEx) {
-                if (gtppMap.mNEIAllowed) {
-                    FluidRecipe.addRecipeMap(gtppMap.mNEIName, new GTPPRecipeExtractor());
+        if (ModAndClassUtil.GTPP && !ModAndClassUtil.GT5NH) {
+            try {
+                Class<?> gtRecipeMapClazz = Class.forName("gregtech.api.util.GT_Recipe$GT_Recipe_Map");
+                Class<?> gtppRecipeMapClazz = Class.forName("gregtech.api.util.GTPP_Recipe$GTPP_Recipe_Map_Internal");
+                Collection<?> sMappingsEx = (Collection<?>) gtppRecipeMapClazz.getDeclaredField("sMappingsEx")
+                        .get(null);
+                for (Object gtppMap : sMappingsEx) {
+                    boolean mNEIAllowed = gtRecipeMapClazz.getDeclaredField("mNEIAllowed").getBoolean(gtppMap);
+                    if (mNEIAllowed) {
+                        String mNEIName = (String) gtRecipeMapClazz.getDeclaredField("mNEIName").get(gtppMap);
+                        FluidRecipe.addRecipeMap(mNEIName, new GTPPRecipeExtractor());
+                    }
                 }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
         }
 
