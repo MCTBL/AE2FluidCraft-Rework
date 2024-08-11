@@ -1,6 +1,8 @@
 package com.glodblock.github.util;
 
 import static com.glodblock.github.common.item.ItemBaseWirelessTerminal.infinityBoosterCard;
+import static com.glodblock.github.common.item.ItemBaseWirelessTerminal.infinityEnergyCard;
+import static com.glodblock.github.util.Util.DimensionalCoordSide.hasEnergyCard;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -9,6 +11,7 @@ import java.util.Map;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.init.Items;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -91,15 +94,19 @@ public final class Util {
             c.setValidContainer(false);
         }
         ticks++;
+
         if (ticks > 10 && wt != null) {
-            wt.extractAEPower(pm * ticks, Actionable.MODULATE, PowerMultiplier.CONFIG);
+            if (!hasEnergyCard(wt.getItemStack())) {
+                wt.extractAEPower(pm * ticks, Actionable.MODULATE, PowerMultiplier.CONFIG);
+            }
             ticks = 0;
         }
+
         return ticks;
     }
 
     public static boolean hasInfinityBoosterCard(ItemStack is) {
-        if (ModAndClassUtil.WCT && is.getItem() instanceof ItemBaseWirelessTerminal) {
+        if (is.getItem() instanceof ItemBaseWirelessTerminal) {
             NBTTagCompound data = Platform.openNbtData(is);
             return data.hasKey(infinityBoosterCard) && data.getBoolean(infinityBoosterCard);
         }
@@ -425,6 +432,8 @@ public final class Util {
 
     public static class FluidUtil {
 
+        public static final ItemStack water_bucket = new ItemStack(Items.water_bucket, 1);
+
         public static void fluidTankInfoWriteToNBT(FluidTankInfo[] infos, NBTTagCompound data) {
             int i = 0;
             for (FluidTankInfo info : infos) {
@@ -630,6 +639,14 @@ public final class Util {
                     data.getInteger("dim"),
                     ForgeDirection.getOrientation(data.getInteger("side")),
                     data.getString("name"));
+        }
+
+        public static boolean hasEnergyCard(ItemStack is) {
+            if (is.getItem() instanceof ItemBaseWirelessTerminal) {
+                NBTTagCompound data = Platform.openNbtData(is);
+                return (data.hasKey(infinityEnergyCard) && data.getBoolean(infinityEnergyCard));
+            }
+            return false;
         }
 
     }

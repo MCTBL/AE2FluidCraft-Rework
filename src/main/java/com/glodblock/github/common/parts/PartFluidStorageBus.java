@@ -29,6 +29,7 @@ import appeng.api.config.IncludeExclude;
 import appeng.api.config.Settings;
 import appeng.api.config.StorageFilter;
 import appeng.api.config.Upgrades;
+import appeng.api.config.YesNo;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.events.MENetworkCellArrayUpdate;
 import appeng.api.networking.events.MENetworkChannelsChanged;
@@ -66,6 +67,7 @@ import appeng.parts.automation.PartUpgradeable;
 import appeng.tile.inventory.AppEngInternalAEInventory;
 import appeng.tile.inventory.InvOperation;
 import appeng.tile.networking.TileCableBus;
+import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.item.AEFluidStack;
 import appeng.util.prioitylist.PrecisePriorityList;
@@ -93,6 +95,7 @@ public class PartFluidStorageBus extends PartUpgradeable
         this.getConfigManager().registerSetting(Settings.ACCESS, AccessRestriction.READ_WRITE);
         this.getConfigManager().registerSetting(Settings.FUZZY_MODE, FuzzyMode.IGNORE_ALL);
         this.getConfigManager().registerSetting(Settings.STORAGE_FILTER, StorageFilter.EXTRACTABLE_ONLY);
+        this.getConfigManager().registerSetting(Settings.STICKY_MODE, YesNo.NO);
         this.source = new MachineSource(this);
     }
 
@@ -205,11 +208,11 @@ public class PartFluidStorageBus extends PartUpgradeable
                 if (!currentAccess.hasPermission(AccessRestriction.READ)) {
                     readOncePass = true;
                 }
-                before = in.getAvailableItems(before);
+                before = in.getAvailableItems(before, IterationCounter.fetchNewId());
                 in.setBaseAccess(currentAccess);
                 accessChanged = false;
             } else {
-                before = in.getAvailableItems(before);
+                before = in.getAvailableItems(before, IterationCounter.fetchNewId());
             }
         }
 
@@ -223,7 +226,7 @@ public class PartFluidStorageBus extends PartUpgradeable
 
         if (in != out) {
             if (out != null) {
-                after = out.getAvailableItems(after);
+                after = out.getAvailableItems(after, IterationCounter.fetchNewId());
             }
             Platform.postListChanges(before, after, this, this.source);
         }
@@ -371,6 +374,7 @@ public class PartFluidStorageBus extends PartUpgradeable
                     this.handler.setWhitelist(
                             this.getInstalledUpgrades(Upgrades.INVERTER) > 0 ? IncludeExclude.BLACKLIST
                                     : IncludeExclude.WHITELIST);
+                    this.handler.setSticky(this.getInstalledUpgrades(Upgrades.STICKY) > 0);
                     this.handler.setPriority(this.priority);
                     if (inv instanceof IMEMonitor) {
                         ((IBaseMonitor) inv).addListener(this, this.handler);
@@ -429,11 +433,6 @@ public class PartFluidStorageBus extends PartUpgradeable
         this.priority = newValue;
         this.getHost().markForSave();
         this.resetCache(true);
-    }
-
-    @Override
-    public void blinkCell(int slot) {
-        // NO-OP
     }
 
     @Override
