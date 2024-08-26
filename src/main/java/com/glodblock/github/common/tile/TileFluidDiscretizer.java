@@ -81,11 +81,6 @@ public class TileFluidDiscretizer extends AENetworkTile implements IPriorityHost
     }
 
     @Override
-    public void blinkCell(int slot) {
-        // do nothing
-    }
-
-    @Override
     public void gridChanged() {
         IMEMonitor<IAEFluidStack> fluidGrid = getFluidGrid();
         if (fluidGrid != null) {
@@ -194,7 +189,7 @@ public class TileFluidDiscretizer extends AENetworkTile implements IPriorityHost
         }
 
         @Override
-        public IItemList<IAEItemStack> getAvailableItems(IItemList<IAEItemStack> out) {
+        public IItemList<IAEItemStack> getAvailableItems(IItemList<IAEItemStack> out, int iteration) {
             if (itemCache == null) {
                 itemCache = AEApi.instance().storage().createItemList();
                 IMEMonitor<IAEFluidStack> fluidGrid = getFluidGrid();
@@ -215,7 +210,7 @@ public class TileFluidDiscretizer extends AENetworkTile implements IPriorityHost
         }
 
         @Override
-        public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request) {
+        public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request, int iteration) {
             IMEMonitor<IAEFluidStack> fluidGrid = getFluidGrid();
             if (fluidGrid == null) {
                 return null;
@@ -224,7 +219,7 @@ public class TileFluidDiscretizer extends AENetworkTile implements IPriorityHost
             if (fluidRequest == null) {
                 return null;
             }
-            IAEFluidStack availableFluid = fluidGrid.getAvailableItem(fluidRequest);
+            IAEFluidStack availableFluid = fluidGrid.getAvailableItem(fluidRequest, iteration);
             if (availableFluid == null || availableFluid.getFluid() == null
                     || FluidCraftAPI.instance().isBlacklistedInDisplay(availableFluid.getFluid().getClass())) {
                 return null;
@@ -269,9 +264,42 @@ public class TileFluidDiscretizer extends AENetworkTile implements IPriorityHost
         }
     }
 
+    private class FluidCraftingInventoryHandler extends MEInventoryHandler<IAEFluidStack> {
+
+        public FluidCraftingInventoryHandler(IMEInventory<IAEFluidStack> i, StorageChannel channel) {
+            super(i, channel);
+        }
+
+        @Override
+        public boolean isPrioritized(IAEFluidStack input) {
+            return true;
+        }
+
+        @Override
+        public boolean canAccept(IAEFluidStack input) {
+            ICraftingGrid craftingGrid;
+            try {
+                craftingGrid = getProxy().getGrid().getCache(ICraftingGrid.class);
+            } catch (GridAccessException e) {
+                return false;
+            }
+            if (craftingGrid instanceof CraftingGridCache craftingGridCache) {
+                return craftingGridCache.canAccept(ItemFluidDrop.newAeStack(input));
+            }
+            return false;
+        }
+
+        @Override
+        public boolean isAutoCraftingInventory() {
+            return true;
+        }
+    }
+
     private class FluidCraftingInventory implements IMEInventory<IAEFluidStack> {
 
-        private final MEInventoryHandler<IAEFluidStack> invHandler = new MEInventoryHandler<>(this, getChannel());
+        private final MEInventoryHandler<IAEFluidStack> invHandler = new FluidCraftingInventoryHandler(
+                this,
+                getChannel());
 
         FluidCraftingInventory() {
             invHandler.setPriority(Integer.MAX_VALUE);
@@ -302,12 +330,12 @@ public class TileFluidDiscretizer extends AENetworkTile implements IPriorityHost
         }
 
         @Override
-        public IItemList<IAEFluidStack> getAvailableItems(IItemList<IAEFluidStack> out) {
+        public IItemList<IAEFluidStack> getAvailableItems(IItemList<IAEFluidStack> out, int iteration) {
             return out;
         }
 
         @Override
-        public IAEFluidStack getAvailableItem(@Nonnull IAEFluidStack request) {
+        public IAEFluidStack getAvailableItem(@Nonnull IAEFluidStack request, int iteration) {
             return null;
         }
 
