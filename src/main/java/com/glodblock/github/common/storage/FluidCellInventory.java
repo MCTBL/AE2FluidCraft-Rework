@@ -188,13 +188,16 @@ public class FluidCellInventory implements IFluidCellInventory {
 
     @Override
     public int getStatusForCell() {
-        if (this.canHoldNewFluid()) {
+        if (this.getUsedBytes() == 0) {
             return 1;
         }
-        if (this.getRemainingFluidCount() > 0) {
+        if (this.canHoldNewFluid()) {
             return 2;
         }
-        return 3;
+        if (this.getRemainingFluidCount() > 0) {
+            return 3;
+        }
+        return 4;
     }
 
     protected void loadCellFluids() {
